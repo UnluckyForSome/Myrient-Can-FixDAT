@@ -1015,54 +1015,6 @@ class TestQueueAllReady:
 
 
 # ============================================================================
-# import_library_report (multi-report version)
-# ============================================================================
-
-
-class TestImportLibraryReport:
-    def test_import_json_single_platform(self, service, tmp_path):
-        """Minimal library report JSON with one platform."""
-        j = tmp_path / "library.json"
-        j.write_text(
-            '{"unresolved": [{"platform_id": "nintendo-nintendo-entertainment-system", '
-            '"title": "Super Mario Bros (World).zip"}]}'
-        )
-        reports = service.import_library_report(j)
-        assert len(reports) >= 1
-        r = reports[0]
-        # Platform ID is mapped to system name via _PLATFORM_MAP
-        assert "Nintendo Entertainment System" in r.system
-
-    def test_import_json_with_report_id(self, service, tmp_path):
-        j = tmp_path / "lib2.json"
-        j.write_text(
-            '{"unresolved": [{"platform_id": "sega-mega-drive", '
-            '"title": "Sonic (USA).zip"}]}'
-        )
-        reports = service.import_library_report(j, report_id="custom_id")
-        assert len(reports) >= 1
-        assert "custom_id" in reports[0].id
-
-    def test_import_json_no_unresolved(self, service, tmp_path):
-        j = tmp_path / "lib3.json"
-        j.write_text("{}")
-        reports = service.import_library_report(j)
-        assert reports == []
-
-    def test_import_json_multiple_platforms(self, service, tmp_path):
-        """Groups entries by platform_id."""
-        j = tmp_path / "lib4.json"
-        j.write_text(
-            '{"unresolved": ['
-            '{"platform_id": "nintendo-nintendo-entertainment-system", "title": "Mario.zip"},'
-            '{"platform_id": "sega-mega-drive", "title": "Sonic.zip"}'
-            ']}'
-        )
-        reports = service.import_library_report(j)
-        assert len(reports) == 2
-
-
-# ============================================================================
 # Edge cases for infer_scope (DAT file with distribution)
 # ============================================================================
 

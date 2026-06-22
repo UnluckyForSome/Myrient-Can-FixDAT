@@ -7,7 +7,7 @@ Covers:
 - Path fragment detection (#platform-id in .json paths)
 - match_report with fragment paths (JSON library reports)
 - _build_candidates_html output structure
-- _rematch_json_task return structure
+- RomM destination in planner
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+
 
 import pytest
 
@@ -189,32 +189,6 @@ class TestSystemToRomSlugInvariants:
             + ", ".join(f"{k!r} -> {v}" for k, v in list(ambiguous.items())[:5])
         )
 
-    def test_romm_canonical_slugs_match_romresolve(self):
-        """Slugs for major platforms must match romresolve's ROMM_PLATFORM_MAP."""
-        try:
-            from romresolve.romm_platforms import ROMM_PLATFORM_MAP
-        except ImportError:
-            pytest.skip("romresolve not installed")
-
-        # _PLATFORM_MAP is a class attribute, not module-level
-        svc = ReportAcquisitionService(state=MinervaState.__new__(MinervaState))
-        platform_map = svc._PLATFORM_MAP
-
-        mismatches = []
-        for platform_id, dat_system in platform_map.items():
-            our_slug = _SYSTEM_TO_ROMM_SLUG.get(dat_system)
-            romm_slug = ROMM_PLATFORM_MAP.get(platform_id)
-            if our_slug and romm_slug and our_slug != romm_slug:
-                mismatches.append(
-                    f"{platform_id}: our={our_slug!r} vs romresolve={romm_slug!r}"
-                )
-        # Some mismatches are expected (e.g., genesis-slash-megadrive vs genesis)
-        # but we should be aware of them
-        # This is informational — not a hard failure
-        # We only hard-fail for PS1 which MUST be 'ps'
-        ps1_mismatches = [m for m in mismatches if "playstation" in m.lower() and "2" not in m.lower() and "3" not in m.lower()]
-        assert not ps1_mismatches, f"PS1 slug mismatch: {ps1_mismatches}"
-
 
 # ============================================================================
 # Path fragment detection
@@ -226,19 +200,19 @@ class TestPathFragmentDetection:
 
     def test_plain_json_path_detected(self):
         """Plain .json path should be detected as JSON."""
-        path = Path("/tmp/library-report.json")
+        path = Path("/tmp/report.json")
         clean_name = path.name.split("#")[0]
         assert clean_name.lower().endswith(".json")
 
     def test_fragment_json_path_detected(self):
         """Path with #fragment should still be detected as JSON."""
-        path = Path("/tmp/library-report.json#sony-playstation")
+        path = Path("/tmp/report.json#sony-playstation")
         clean_name = path.name.split("#")[0]
         assert clean_name.lower().endswith(".json")
 
     def test_suffix_broken_without_fragment_strip(self):
         """Demonstrates that Path.suffix is broken with fragments."""
-        path = Path("/tmp/library-report.json#sony-playstation")
+        path = Path("/tmp/report.json#sony-playstation")
         assert path.suffix.lower() != ".json"
         assert path.suffix == ".json#sony-playstation"
 
@@ -333,10 +307,10 @@ class TestMatchReportWithFragmentPath:
         """match_report must work when report.path contains #platform-id."""
         svc = ReportAcquisitionService(state=tmp_state, db=json_test_db)
 
-        # Create a report with a fragment path (like import_library_report does)
+        # Create a report with a fragment path
         report = ReportSummary(
             id="test_sony-playstation",
-            path="/tmp/library-report.json#sony-playstation",
+            path="/tmp/report.json#sony-playstation",
             name="Romresolve — sony-playstation (3 unresolved)",
             collection="",
             system="Sony - PlayStation",
@@ -379,7 +353,7 @@ class TestMatchReportWithFragmentPath:
 
         report = ReportSummary(
             id="test_plain",
-            path="/tmp/library-report.json",
+            path="/tmp/report.json",
             name="Plain JSON Report",
             collection="",
             system="Sony - PlayStation",
@@ -409,7 +383,7 @@ class TestMatchReportWithFragmentPath:
 
         report = ReportSummary(
             id="test_dec",
-            path="/tmp/library-report.json#sony-playstation",
+            path="/tmp/report.json#sony-playstation",
             name="Decision Test",
             collection="",
             system="Sony - PlayStation",
@@ -564,69 +538,6 @@ class TestBuildCandidatesHtml:
                 assert is_selected is True
             else:
                 assert is_selected is False
-
-
-# ============================================================================
-# _rematch_json_task (integration)
-# ============================================================================
-
-
-class TestRematchJsonTask:
-    """Test the _rematch_json_task helper function."""
-
-    def test_returns_dict_with_counts(self, tmp_state, json_test_db, tmp_path):
-        """_rematch_json_task should return a dict with ready/review_required/not_found."""
-        # First, set up a report via the service
-        svc = ReportAcquisitionService(state=tmp_state, db=json_test_db)
-
-        report = ReportSummary(
-            id="task_test",
-            path="/tmp/library-report.json#sony-playstation",
-            name="Task Test",
-            collection="",
-            system="Sony - PlayStation",
-            imported_at="2026-01-01T00:00:00",
-            requested_count=1,
-            status="draft",
-        )
-        tmp_state.save_report(report)
-
-        entries = [
-            ReviewEntry(
-                id="task_test_0",
-                report_id="task_test",
-                ordinal=0,
-                filename="Crash Bandicoot (USA)",
-                size=357891072,
-            ),
-        ]
-        tmp_state.replace_entries("task_test", entries)
-
-        # Now run the task function
-        from minerva.app.pages.reports import _rematch_json_task
-
-        # _rematch_json_task creates its own MinervaState(), so we need
-        # the state DB to be the default one. We'll mock it instead.
-        with patch("minerva.app.pages.reports.MinervaState", return_value=tmp_state):
-            with patch(
-                "minerva.app.pages.reports.ReportAcquisitionService",
-                return_value=svc,
-            ):
-                result = _rematch_json_task("task_test")
-
-        assert isinstance(result, dict)
-        assert "report_id" in result
-        assert "ready" in result
-        assert "review_required" in result
-        assert "not_found" in result
-        assert result["report_id"] == "task_test"
-        assert result["ready"] >= 1
-
-    def test_task_function_is_importable(self):
-        """The task function must be importable from the reports page module."""
-        from minerva.app.pages.reports import _rematch_json_task
-
-        assert callable(_rematch_json_task)
 
 
 # ============================================================================

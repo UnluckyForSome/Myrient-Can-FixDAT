@@ -213,20 +213,6 @@ def _match_task(
     return generation, db.match_dat_detailed(values, collection=collection, system=system)
 
 
-def _rematch_json_task(report_id: str) -> dict:
-    """Run rematch for a JSON (library) report in a worker thread."""
-    from minerva.services.report_acquisition import ReportAcquisitionService as _Svc
-
-    svc = _Svc(state=MinervaState())
-    counts = svc.match_report(report_id)
-    return {
-        "report_id": report_id,
-        "ready": counts.ready,
-        "review_required": counts.review_required,
-        "not_found": counts.not_found,
-    }
-
-
 class ReportsPage(BasePage):
     """Reference-quality reports dashboard with navigator, workspace and inspector."""
 
@@ -658,36 +644,12 @@ class ReportsPage(BasePage):
 
     def _on_import(self) -> None:
         paths, _ = QtWidgets.QFileDialog.getOpenFileNames(
-            self, "Import fix reports", "", "Fix reports (*.dat *.csv *.json);;All files (*)",
+            self, "Import fix reports", "", "Fix reports (*.dat *.csv);;All files (*)",
         )
         for path in paths:
-            if path.suffix.lower() == ".json":
-                self._import_library_report(path)
-            else:
-                self._import_file(Path(path))
-
-    def _import_library_report(self, path: Path, report_id: str | None = None) -> None:
-        """Import a romresolve library-report JSON and refresh the list.
-
-        Creates one report per platform_id, each scoped to the matching
-        Minerva system for accurate matching.
-        """
-        try:
-            state = MinervaState()
-            svc = ReportAcquisitionService(state=state)
-            reports = svc.import_library_report(path, report_id=report_id)
-            if reports:
-                self._selected_report_id = reports[0].id
-            self.refresh()
-        except Exception as exc:
-            self._error_state.set_description(str(exc))
-            self._set_state(ReportsPageState.ERROR)
+            self._import_file(Path(path))
 
     def _import_file(self, path: Path, report_id: str | None = None) -> None:
-        clean_name = path.name.split("#")[0]
-        if clean_name.lower().endswith(".json"):
-            self._import_library_report(path, report_id)
-            return
         try:
             info = parse_rv_fix_csv(path) if path.suffix.lower() == ".csv" else parse_dat_file(path)
             if not info.entries:
@@ -919,19 +881,6 @@ class ReportsPage(BasePage):
         if report is None:
             return
         path = Path(report.path)
-        # Strip URL-style fragment (#platform-id) before checking suffix
-        clean_name = path.name.split("#")[0]
-        if clean_name.lower().endswith(".json"):
-            # Romresolve library report — entries already saved,
-            # re-run matching in a worker thread.
-            self._set_state(ReportsPageState.LOADING)
-            self._generation += 1
-            gen = self._generation
-            task = TaskRunner(_rematch_json_task, report.id)
-            task.signals.result.connect(lambda payload, rid=report.id: self._on_rematch_result(gen, rid, payload))
-            task.signals.error.connect(lambda details, rid=report.id: self._on_match_error(gen, rid, details))
-            self._pool.start(task)
-            return
         self._import_file(path, report_id=report.id)
 
     def _queue_all_ready(self) -> None:
