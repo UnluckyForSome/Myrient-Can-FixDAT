@@ -1,0 +1,3 @@
+"""
+Minerva application package.
+"""

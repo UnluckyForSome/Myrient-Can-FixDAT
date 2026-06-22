@@ -1,0 +1,20 @@
+/* Surface panel — the primary container surface. */
+QFrame#surfacePanel {
+    background-color: {{token.surface}};
+    border: 1px solid {{token.border}};
+    border-radius: 9px;
+}
+QFrame#surfacePanel > QFrame#separator {
+    background-color: {{token.border}};
+    border: none;
+    max-height: 1px;
+}
+
+/* Panel header — title/count/actions row. */
+QWidget#panelHeader {
+    background: transparent;
+}
+QLabel#panelHeaderTitle {
+    font-size: 13px;
+    font-weight: 650;
+}

@@ -1,129 +1,224 @@
-# 🎮 Myrient Can FixDAT
+# Minerva Can FixDAT
 
-> ⚠️ **v1.0.0 Disclaimer**  
-> This project started as a personal tool I made for myself and later decided to develop and share. While it works well for my use cases, it may not be free of bugs, edge cases, or unexpected behavior. Use it at your own risk, double-check results, and always keep backups of your data and ROM collections!
+> **Myrient** shut down on 31 March 2026.
+> The **Minerva Archive** (https://minerva-archive.org/browse/) is its successor, run by the same team, but uses **torrents** instead of direct HTTP downloads.
 
+A GUI tool that downloads missing ROMs from the **Minerva Archive** via **qBittorrent**. Point it at your **RomVault fix report** or a **DAT file**, and it will download only what you're missing — using the 1050 `.torrent` files covering No-Intro, Redump, MAME, and more.
 
-A GUI tool that downloads missing ROMs from Myrient to complete your game collection. Point it at your existing ROMs, give it a DAT file describing your desired collection, and it will download only what you're missing. Includes built-in DAT downloaders for daily [Fresh1G1R](https://github.com/UnluckyForSome/Fresh1G1R) 1G1R sets and [RetroAchievements](https://github.com/UltraGodAzgorath/Unofficial-RA-DATs) DATs.
+## Features
 
-![Myrient Can FixDAT Screenshot](.github/MyrientCanFixDat.PNG)
+- **Smart Downloads** — Load a RomVault fix report (.csv or fix .dat), auto-match against the Minerva torrent index, preview matches with confidence scoring, and queue missing games
+- **No-Intro, Redump, RetroAchievements DAT Support** — Load any standard DAT; fuzzy-matches game names against the torrent index
+- **RomVault Fix Reports** — Native support for CSV and Fix DAT formats
+- **qBittorrent downloads** — Uses qBittorrent's Web API for selective-file torrent downloads (individual files from multi-file torrents)
+- **Match Review** — Interactive review screen to accept/reject fuzzy matches before queuing
+- **Download Dashboard** — Live progress, speed, ETA, seeds, ratio per torrent; pause/resume individual files
+- **Production-grade** — SQLite + FTS5 full-text search, LRU cache, confidence-scored matching with 7-tier formula
+- **Browse & Search** 2.4M files across 1050 torrents with instant search
+- **Bilingual** — Full UI in English or Spanish (auto-detects user language)
 
-## ✨ Features
+## Getting Started
 
-- 🧠 **Smart Downloads** — Only downloads what you're missing, using either [IGIR](https://github.com/emmercm/igir) for full validation or without, using simple name matching.
-- 📋 **No-Intro and Redump DAT Support** — Works with any No-Intro or Redump DAT files.
-- 📥 **Built-in DAT Downloaders** — Download DATs from [Fresh1G1R](https://github.com/UnluckyForSome/Fresh1G1R) (1G1R sets) or [RetroAchievements](https://github.com/UltraGodAzgorath/Unofficial-RA-DATs) (unofficial RA DATs) with one click.
-- 🔧 **IGIR Integration** — Optionally use [IGIR](https://github.com/emmercm/igir) to scan your existing collection to ensure a perfect set of games every time.
-
-## 🚀 Getting Started
-
-### Option 1: Standalone Executable
-
-> ⚠️ As a general rule, you should **never blindly run `.exe` files from GitHub (or anywhere else)**. Only run executables if you trust the source and understand the risks.
-
-For convenience, a prebuilt [`MyrientCanFixDAT.exe`](https://github.com/UnluckyForSome/Myrient-Can-FixDAT/releases/latest/download/MyrientCanFixDAT.exe) is provided in the Releases section. It is **generated directly from this repository's Python source using PyInstaller**, which bundles the app and Python runtime into a single executable.
-
-🔍 You can review the source used to build the executable here: [`MyrientCanFixDAT.py`](https://github.com/UnluckyForSome/Myrient-Can-FixDAT/blob/main/MyrientCanFixDAT.py).
-
-
-**Steps:**
-1. 📦 Download [`MyrientCanFixDAT.exe`](https://github.com/UnluckyForSome/Myrient-Can-FixDAT/releases/latest/download/MyrientCanFixDAT.exe) from the **Releases** page  
-2. ▶️ Run the `.exe` — required directories will be created alongside it  
-3. ⚙️ Configure your paths and click **Run**
-
-### Option 2: Run from Python 🐍
-
-If you prefer more transparency and running from source:
+### Prerequisites
 
 ```bash
-# Clone the repository
-git clone https://github.com/UnluckyForSome/Myrient-Can-FixDAT.git
-cd Myrient-Can-FixDAT
-
-# Install dependencies
-pip install PyQt5 requests lxml
-
-# Run the application
-python MyrientCanFixDAT.py
+pip install PyQt5
 ```
 
-**Requirements:** Python 3.7+
+**qBittorrent** is required for downloads. The tool connects via its Web API:
+- Install qBittorrent (https://www.qbittorrent.org/)
+- Enable Web UI in qBittorrent: Tools → Preferences → Web UI → enable "Web User Interface"
+- Default: `http://localhost:8080` with user `admin` / `adminadmin`
 
----
+### 1. Clone & Set Up
 
-## ⚙️ Configuration Guide
+```bash
+git clone https://github.com/yourname/minerva-can-fixdat.git
+cd Minerva-Can-FixDAT
+```
 
-### 📂 Paths Section
+### 2. Get the Torrent Pack
 
-**📄 DAT File**  
-The DAT file defines the collection you want to build. This tells the tool which games should exist in your final set.  
-You can either:
-- Click **Fresh 1G1R** to fetch a pre-filtered 1G1R DAT from **Fresh1G1R**,
-- Click **RetroAchievements** to fetch a DAT from the **Unofficial RetroAchievements DATs** repo, or
-- Click **Browse** to choose your own No-Intro or Redump DAT file
+Place the **1050 Minerva torrent files** in:
 
-**📁 ROMs Directory**  
-The folder containing your existing ROM collection.  
-This is only required if you enable **Use IGIR**, which scans your current files to determine what's missing.
+```
+torrents/Minerva Myrient - 1050 torrents/
+```
 
-**💾 Downloads Directory**  
-Where newly downloaded ROMs will be saved.  
-This can be the same as your ROMs directory or a separate folder if you prefer to stage downloads first.
+> The torrent pack is distributed separately by the Minerva community.
+> It's ~452 MB compressed, extracted it's ~2 GB.
 
-**🌐 Myrient Base URL**  
-The base URL for Myrient. It's not coded into this repo, you have to add it yourself!  
-The system-specific path each set of downloads is automatically determined from the DAT file, so only the base URL is required.
+### 3. Build the Index
 
----
+```bash
+python minerva_gui.py --index
+```
 
-### 🎛️ Options Section
+This parses all 1050 `.torrent` files and builds a **2.4M-entry search index** with:
+- SQLite + FTS5 for full-text search
+- 1.3 GB index file at `torrents/minerva_index.db`
+- Takes ~3-4 minutes, **one-time operation**
 
-**🔧 Use IGIR to Align a Pre-Existing Collection**  
-Enable this if you already have ROMs and only want to download what's missing.  
-When enabled, the tool uses IGIR to scan your ROMs directory and compare it against the DAT file.  
+### 4. Launch
 
-The IGIR .exe will be downloaded automatically if it isn't already present, so ensure you're OK with this before proceeding.
+```bash
+python minerva_gui.py
+```
 
-**🧹 Move Unrequired ROMs**  
-When enabled, any ROMs in your collection that are *not* listed in the DAT file will be moved to a separate `NotRequired` folder. **This doesn't delete anything**, instead it just moved the potentially unwanted ROMs to a separate folder allowing you to decide what to delete at a later date.  
+## Usage
 
-This is useful for cleaning up duplicates or unwanted versions while keeping them safely out of the way.
+### Search
 
----
+Type in the search bar — searches all 2.4M files in real-time. Filter by Collection/System dropdowns.
 
-## 📥 Downloading DAT Files
+### Load a ROMVault Fix Report
 
-The app offers two built-in DAT sources next to the DAT file field:
+1. Run RomVault against your collection to generate a fix report
+2. Click **Load Fix Report**
+3. Select your `.csv` or `.fixdat` file
+4. The tool matches each entry against the Minerva index using confidence-scored title matching
+5. Review matches in the Match Review screen — accept/reject ambiguous candidates
+6. Confirmed matches move to the download queue
 
-### Fresh 1G1R
+### Load a DAT File
 
-Click **Fresh 1G1R** to open the 1G1R DAT downloader. You can fetch fresh, daily-updated 1G1R (One Game, One ROM) DAT files from [Fresh1G1R](https://github.com/UnluckyForSome/Fresh1G1R).
+1. Click **Load DAT...**
+2. Select a No-Intro, Redump, or RetroAchievements `.dat` file
+3. Collection and System are auto-detected from the DAT header
+4. Games are matched and reviewed interactively
 
-**What is 1G1R?**  
-1G1R DAT files are filtered versions of full DAT collections (like Redump or No-Intro) that include only one version of each game — typically the best regional release. This gives you a curated collection without duplicates.
+### Download Dashboard
 
-**Virgin DAT Source:**
-- 💿 **Redump** — Disc-based systems (PlayStation, Saturn, Dreamcast, etc.)
-- 🎮 **No-Intro** — Cartridge-based systems (NES, SNES, Game Boy, N64, etc.)
+- View live status of all queued torrents (downloading, seeding, paused, error)
+- Per-file progress, download speed, ETA, seeds, peer count, ratio
+- Actions column: start, pause, remove individual torrents
+- Matches flow through from Match Review → Download Controller → qBittorrent
+- Completed files are exposed to your library directory (hardlink or copy)
 
-**Filtered Game Collection:**
-- 🧼 **McLean** — English-only retail releases. The leanest option.
-- 📦 **PropeR** — All languages, includes add-ons, educational, and promotional content.
-- ❤️ **Hearto** — Most inclusive: retail, unlicensed, demos, and preproduction (betas/protos).
+## Architecture
 
-Pick your source and collection type, choose the system (e.g., "Sony - PlayStation"), then click Download.
+```
+minerva/
+├── app/                    # Application layer
+│   ├── shell.py            # Main window (QMainWindow) — top-level app shell
+│   ├── download_controller.py  # Download orchestration — QbitMonitor,
+│   │                         #   queue management, file exposure, signals
+│   ├── domain/             # Pure domain types (dataclasses, enums)
+│   │   └── downloads.py    #   QueueRecord, DownloadRuntime, DownloadStatus
+│   ├── pages/              # Page panels (stacked in shell)
+│   │   ├── downloads.py    # Live download dashboard with telemetry
+│   │   ├── match_review.py # Interactive match acceptance screen
+│   │   ├── collections.py  # Collection browser with rebuild
+│   │   └── library.py      # Local library view with context actions
+│   └── widgets/            # Reusable widgets
+│       ├── background_task.py  # Threaded task runner with signals
+│       ├── speed_chart.py  # Live download speed chart
+│       └── delegates.py    # Custom item delegates (progress bar, actions)
+├── app/worker_manager.py   # Background task queue (delegates to controller)
+├── minerva_db.py           # Production database layer
+│   ├── v2 schema           # SQLite + FTS5 + trigram indexes
+│   ├── build_index()       # Parses .torrent files → SQLite DB
+│   ├── MinervaDB           # Main interface
+│   │   ├── search()        # Substring search with filters
+│   │   ├── match_dat_detailed()  # 7-tier confidence-scored matching
+│   │   └── DatEntry        # Domain type for matched entries
+│   ├── parse_dat_file()    # No-Intro/Redump/RA DAT XML parser
+│   └── parse_rv_fix_csv() # RomVault CSV fix report parser
+├── app/minerva_qbit.py     # qBittorrent Web API wrapper
+├── app/minerva_state.py    # Global application state
+├── minerva_gui.py          # Legacy entry point (delegates to shell)
+├── minerva_cli.py          # CLI tool (index, search, find, download)
+└── ui/                     # UI module (theme, i18n)
 
-### RetroAchievements
+tests/
+├── test_minerva_db.py      # 26+ model tests
+├── test_match_review.py    # MatchReviewPage construction, states, cards
+├── test_match_scoring.py   # Confidence formula branch coverage
+├── test_new_implementations.py  # Rebuild, activity, context menu, CLI
+└── test_download_model.py  # DownloadRecord, delegates, model
+```
 
-Click **RetroAchievements** to open a separate dialog that lists DAT files from the [Unofficial RetroAchievements DATs](https://github.com/UltraGodAzgorath/Unofficial-RA-DATs) repository. These DATs are aligned with [RetroAchievements](https://retroachievements.org/) sets (No Subfolders). Pick a system DAT and click Download. The app has no control over this repo — DATs may be out of date or unsuitable; use at your discretion.
+### Matching confidence tiers
 
-## 🙏 Thanks
+| Tier | Condition | Confidence |
+|------|-----------|------------|
+| 1 | Exact stem match | 1.00 |
+| 2 | Core title match (normalized) | 0.96 |
+| 3 | Strong keyword overlap (>=80%) | 0.95 |
+| 4 | Moderate keyword overlap (>=50%) | 0.85 |
+| 5 | Weak keyword overlap | 0.70 |
+| 6 | No keywords possible | 0.50 |
 
+**Adjustments**: matching size +0.03, collection/system match +0.02, size mismatch >10% -0.08, cross-system/collection -0.15. Clamped to [0, 1].
+
+### Download pipeline
+
+```
+DAT/Fix Report → match_dat_detailed() → MatchReviewPage → DownloadController
+                                                                    ↓
+                                                            QbitMonitor (thread)
+                                                                    ↓
+                                                            qBittorrent Web API
+                                                                    ↓
+                                                            File exposure (hardlink/copy)
+```
+
+## CLI Usage
+
+```bash
+# Build/rebuild index
+python minerva_cli.py index
+
+# Search for games
+python minerva_cli.py find "Tetris"
+
+# Download a single game (headless qBittorrent)
+python minerva_cli.py download "Tetris DX (World) (SGB Enhanced) (GB Compatible)"
+
+# List all torrents by collection
+python minerva_cli.py list
+```
+
+## Running Tests
+
+```bash
+python -m pytest tests/ -v
+
+# Run a specific test file:
+python -m pytest tests/test_match_scoring.py -v
+
+# Unit tests only (fast, no DB required):
+python -m pytest tests/ -v --ignore=tests/test_minerva_db.py
+```
+
+## How the Matching Works
+
+Game names from DAT files often differ from torrent filenames:
+
+| Difference | DAT | Torrent |
+|-----------|-----|---------|
+| Periods | `Super Mario Bros Deluxe` | `Super Mario Bros. Deluxe` |
+| Apostrophes | `Link-s Awakening` | `Link's Awakening` |
+| The placement | `The Legend of Zelda` | `Legend of Zelda, The` |
+| Extra parens | `R-Type DX` | `R-Type DX (USA) (GB Compatible)` |
+| Brothers/Bros | `Super Mario Brothers` | `Super Mario Bros.` |
+
+The matching pipeline normalizes all these differences via:
+1. Stripping parentheses and punctuation
+2. Normalizing "brothers" → "bros" and "The" placement
+3. Comparing core title and keyword overlap with confidence scoring
+4. Reviewing low-confidence matches interactively before download
+
+## Credits
+
+- **Minerva Archive Team** — Keeping ROM preservation alive after Myrient
 - [Fresh1G1R](https://github.com/UnluckyForSome/Fresh1G1R) — Daily updated 1G1R DAT files
-- [Unofficial RetroAchievements DATs](https://github.com/UltraGodAzgorath/Unofficial-RA-DATs) — RetroAchievements-aligned DAT sets
-- [IGIR](https://github.com/emmercm/igir) — ROM collection manager by emmercm
-- [Retool](https://github.com/unexpectedpanda/retool) — 1G1R filtering tool by unexpectedpanda
-- [Redump](http://redump.org/) — Disc preservation project
-- [No-Intro](https://no-intro.org/) — Cartridge preservation project
+- [RomGoGetter](https://github.com/shokoe/RomGoGetter) — Reference implementation for Minerva torrents
+- [No-Intro](https://no-intro.org/) — Cartridge preservation
+- [Redump](http://redump.org/) — Disc preservation
+- [autobrr/mkbrr](https://github.com/autobrr/mkbrr) — Torrent creation tool used by Minerva
+- [qBittorrent](https://www.qbittorrent.org/) — Torrent download engine
 
----
+## License
+
+MIT

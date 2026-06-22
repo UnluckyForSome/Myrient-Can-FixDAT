@@ -1,0 +1,233 @@
+/* Downloads reference screen ------------------------------------------------ */
+
+QWidget#downloadsPage {
+    background: {{token.background}};
+}
+
+QFrame#downloadConnectionBanner {
+    background: #351d25;
+    border: 1px solid {{token.error}};
+    border-radius: 8px;
+}
+
+QFrame#downloadConnectionBanner[connected="true"] {
+    background: #153126;
+    border-color: {{token.success}};
+}
+
+QLabel#downloadConnectionDot {
+    color: {{token.error}};
+    font-size: 14px;
+}
+
+QFrame#downloadConnectionBanner[connected="true"] QLabel#downloadConnectionDot {
+    color: {{token.success}};
+}
+
+QLabel#downloadConnectionText {
+    color: {{token.text}};
+    font-weight: 600;
+}
+
+QFrame#downloadPanel,
+QFrame#downloadInspector,
+QFrame#throughputPanel,
+QFrame#downloadActivityPanel {
+    background: {{token.surface}};
+    border: 1px solid {{token.border}};
+    border-radius: 10px;
+}
+
+QFrame#downloadToolbar {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid {{token.border}};
+}
+
+QLineEdit#downloadSearch {
+    min-height: 36px;
+    padding: 0 12px;
+    background: {{token.background}};
+    border: 1px solid {{token.border}};
+    border-radius: 7px;
+}
+
+QLineEdit#downloadSearch:focus {
+    border-color: {{token.accent}};
+}
+
+QTableView#downloadsTable {
+    background: {{token.surface}};
+    alternate-background-color: {{token.background}};
+    border: none;
+    gridline-color: transparent;
+    selection-background-color: #1d3b60;
+    selection-color: {{token.text}};
+}
+
+QTableView#downloadsTable::item {
+    padding: 4px 8px;
+    border-bottom: 1px solid {{token.border}};
+}
+
+QTableView#downloadsTable::item:hover {
+    background: {{token.surface_raised}};
+}
+
+QTableView#downloadsTable QHeaderView::section {
+    min-height: 34px;
+    background: {{token.surface_raised}};
+    border: none;
+    border-bottom: 1px solid {{token.border}};
+    padding: 0 8px;
+}
+
+QFrame#downloadSummaryBar {
+    background: {{token.surface_raised}};
+    border: none;
+    border-top: 1px solid {{token.border}};
+}
+
+QLabel#downloadSummaryText {
+    color: {{token.text_muted}};
+    font-size: 12px;
+}
+
+QLabel#downloadSummarySpeed,
+QLabel#chartCurrent {
+    color: {{token.accent}};
+    font-weight: 600;
+}
+
+QLabel#chartPeak {
+    color: {{token.text_muted}};
+}
+
+QLabel#panelTitle,
+QLabel#inspectorSectionTitle {
+    color: {{token.text}};
+    font-weight: 700;
+    font-size: 14px;
+}
+
+QLabel#downloadStatusBadge {
+    color: {{token.text_muted}};
+    background: {{token.surface_raised}};
+    border-radius: 10px;
+    padding: 3px 9px;
+    font-weight: 600;
+}
+
+QLabel#downloadStatusBadge[state="downloading"],
+QLabel#downloadStatusBadge[state="starting"] {
+    color: {{token.accent}};
+    background: #162d49;
+}
+
+QLabel#downloadStatusBadge[state="seeding"],
+QLabel#downloadStatusBadge[state="completed"] {
+    color: {{token.success}};
+    background: #153126;
+}
+
+QLabel#downloadStatusBadge[state="queued"] {
+    color: {{token.warning}};
+    background: #352817;
+}
+
+QLabel#downloadStatusBadge[state="failed"] {
+    color: {{token.error}};
+    background: #351d25;
+}
+
+QLabel#downloadInspectorTitle {
+    color: {{token.text}};
+    font-weight: 700;
+    font-size: 16px;
+}
+
+QLabel#downloadInspectorSubtitle,
+QLabel#downloadInspectorTorrent,
+QLabel#downloadInspectorLabel {
+    color: {{token.text_muted}};
+    font-size: 12px;
+}
+
+QLabel#downloadInspectorValue {
+    color: {{token.text}};
+    font-weight: 600;
+}
+
+QLabel#downloadInspectorPath {
+    color: {{token.text}};
+    background: {{token.background}};
+    border: 1px solid {{token.border}};
+    border-radius: 6px;
+    padding: 8px;
+}
+
+QLabel#downloadInspectorError {
+    color: {{token.error}};
+    background: #351d25;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+QProgressBar#downloadInspectorProgress {
+    min-height: 9px;
+    max-height: 9px;
+    border: none;
+    border-radius: 4px;
+    background: {{token.surface_raised}};
+    text-align: center;
+    color: transparent;
+}
+
+QProgressBar#downloadInspectorProgress::chunk {
+    background: {{token.accent}};
+    border-radius: 4px;
+}
+
+QFrame#downloadInspectorSeparator {
+    color: {{token.border}};
+    background: {{token.border}};
+    max-height: 1px;
+}
+
+QListWidget#activityList {
+    background: transparent;
+    border: none;
+    outline: none;
+}
+
+QListWidget#activityList::item {
+    border-bottom: 1px solid {{token.border}};
+}
+
+QLabel#activityTimestamp {
+    color: {{token.text_muted}};
+    font-size: 11px;
+}
+
+QPushButton#linkButton {
+    background: transparent;
+    color: {{token.accent}};
+    border: none;
+    padding: 4px 6px;
+}
+
+QPushButton#linkButton:hover {
+    text-decoration: underline;
+}
+
+QPushButton#warningButton {
+    color: {{token.warning}};
+    background: transparent;
+    border: 1px solid {{token.warning}};
+    border-radius: 6px;
+    min-height: 34px;
+}
+
+QPushButton#warningButton:hover {
+    background: #352817;
+}

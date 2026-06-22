@@ -1,0 +1,104 @@
+/* ── Library reference screen ──────────────────────────────────────────── */
+
+QFrame#libraryToolbar,
+QFrame#librarySummaryBar,
+QFrame#facetPanel {
+    background: {{token.surface}};
+    border: 1px solid {{token.border}};
+    border-radius: 9px;
+}
+QFrame#libraryToolbar QLineEdit#librarySearchInput {
+    background: {{token.background}};
+    border-color: transparent;
+    min-height: 31px;
+}
+QComboBox#libraryFilterCombo {
+    min-width: 160px;
+    background: {{token.background}};
+    border-color: transparent;
+}
+QFrame#librarySummaryBar { min-height: 54px; }
+QLabel#librarySummaryIcon {
+    background: {{token.surface_raised}};
+    border: 1px solid {{token.border}};
+    border-radius: 6px;
+}
+QLabel#librarySummaryValue { color: {{token.text}}; font-size: 13px; font-weight: 700; }
+QLabel#librarySummaryLabel { color: {{token.text_muted}}; font-size: 10px; }
+QFrame#summarySeparator { background: {{token.border}}; border: none; }
+
+QFrame#libraryResultsHeader {
+    background: {{token.surface}};
+    border: none;
+    border-bottom: 1px solid {{token.border}};
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+}
+QTableView#libraryTable {
+    background: {{token.surface}};
+    alternate-background-color: {{token.surface}};
+    border: none;
+}
+QTableView#libraryTable::item { padding: 5px 8px; }
+QTableView#libraryTable::item:hover { background: {{token.surface_raised}}; }
+QTableView#libraryTable::item:selected {
+    background: {{token.surface_raised}};
+    color: {{token.text}};
+    border-left: 2px solid {{token.accent}};
+}
+QWidget#libraryPagination {
+    background: {{token.surface}};
+    border-top: 1px solid {{token.border}};
+    padding: 8px 10px;
+}
+QScrollArea#facetScroll,
+QScrollArea#facetScroll > QWidget > QWidget { background: transparent; border: none; }
+QFrame#facetGroup { background: transparent; border: none; }
+QToolButton#facetHeader {
+    background: transparent;
+    color: {{token.text}};
+    border: none;
+    padding: 5px 2px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 650;
+}
+QToolButton#facetHeader:hover { color: {{token.accent}}; }
+
+QLabel#coverPreview {
+    background: {{token.background}};
+    border: 1px solid {{token.border}};
+    border-radius: 9px;
+    padding: 6px;
+}
+QLabel#libraryInspectorTitle {
+    color: {{token.text}};
+    font-size: 16px;
+    font-weight: 680;
+}
+QLabel#libraryInspectorSubtitle {
+    color: {{token.text_muted}};
+    font-size: 11px;
+}
+QLabel#libraryInspectorKey {
+    color: {{token.text_muted}};
+    font-size: 10px;
+    min-width: 66px;
+}
+QLabel#libraryInspectorValue { color: {{token.text}}; font-size: 11px; }
+QProgressBar#libraryLoadingBar {
+    min-height: 4px;
+    max-height: 4px;
+    border-radius: 2px;
+    background: {{token.surface_raised}};
+}
+QProgressBar#libraryLoadingBar::chunk { background: {{token.accent}}; border-radius: 2px; }
+QLabel#emptyStateTitle { color: {{token.text}}; font-size: 17px; font-weight: 650; }
+QLabel#emptyStateDescription { color: {{token.text_muted}}; font-size: 12px; }
+QPushButton#accentButton {
+    background: {{token.accent}};
+    color: white;
+    border: 1px solid {{token.accent}};
+    border-radius: 6px;
+    padding: 5px 14px;
+}

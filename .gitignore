@@ -44,3 +44,20 @@ fixdat_temp.dat
 
 # directories
 dat/
+
+# Minerva Can FixDAT
+torrents/minerva_index.db
+torrents/minerva_index.json
+poc_downloads/
+test_dl_output/
+.qbitseed/   # persistent qBittorrent working state (partial .parts, seed data)
+.tmp_dl/     # legacy aria2c temp
+.tmp_qbit/   # legacy qbit temp
+# Data / runtime
+data/
+torrents/
+.atl/
+*.torrent
+*.patch
+*.uiux.patch
+poc_minerva.py

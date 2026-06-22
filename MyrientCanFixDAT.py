@@ -33,7 +33,7 @@ from typing import Callable, Dict, List, Literal, Optional, Tuple
 import requests
 
 # Qt imports
-from PyQt5 import QtCore, QtGui, QtWidgets  # type: ignore
+from PyQt5 import QtCore, QtGui, QtNetwork, QtWidgets  # type: ignore
 from PyQt5.QtCore import QSettings
 
 # Optional HTML parser (recommended). If missing, we fall back to a simpler regex parser.
@@ -2003,61 +2003,6 @@ class CustomCheckBox(QtWidgets.QCheckBox):
             painter.end()
 
 
-class TitleBar(QtWidgets.QWidget):
-    """Custom dark title bar for a frameless window."""
-
-    def __init__(self, window: QtWidgets.QWidget) -> None:
-        super().__init__(window)
-        self._window = window
-        self._drag_pos: Optional[QtCore.QPoint] = None
-
-        self.setObjectName("titleBar")
-        self.setFixedHeight(TITLE_BAR_HEIGHT)
-
-        layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(10, 4, 8, 4)
-        layout.setSpacing(8)
-
-        icon_label = QtWidgets.QLabel("🎮")
-        icon_label.setObjectName("titleIcon")
-
-        title_label = QtWidgets.QLabel("Myrient Can FixDAT")
-        title_label.setObjectName("titleText")
-
-        layout.addWidget(icon_label)
-        layout.addWidget(title_label)
-        layout.addStretch(1)
-
-        self.min_button = QtWidgets.QPushButton("−")
-        self.min_button.setObjectName("titleButton")
-        self.min_button.setFixedSize(28, 22)
-        self.min_button.clicked.connect(self._window.showMinimized)  # type: ignore[attr-defined]
-
-        self.close_button = QtWidgets.QPushButton("×")
-        self.close_button.setObjectName("titleButtonClose")
-        self.close_button.setFixedSize(28, 22)
-        self.close_button.clicked.connect(self._window.close)  # type: ignore[attr-defined]
-
-        layout.addWidget(self.min_button)
-        layout.addWidget(self.close_button)
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
-        if event.button() == QtCore.Qt.LeftButton:
-            self._drag_pos = event.globalPos() - self._window.frameGeometry().topLeft()  # type: ignore[attr-defined]
-            event.accept()
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
-        if self._drag_pos is not None and (event.buttons() & QtCore.Qt.LeftButton):
-            self._window.move(event.globalPos() - self._drag_pos)  # type: ignore[attr-defined]
-            event.accept()
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
-        self._drag_pos = None
-        super().mouseReleaseEvent(event)
-
-
 class _MyrientOverrideReceiver(QtCore.QObject):
     """Lives in worker thread; receives override URL from main window and quits the worker's event loop."""
 
@@ -2404,7 +2349,7 @@ class DownloadWorker(QtCore.QThread):
                     else:
                         failed += 1
                         self.log_signal.emit(f"❌ [{i}/{total_games}] {game_name} - Some files failed")
-                except Exception as e:  # noqa: BLE001
+                except Exception:  # noqa: BLE001
                     failed += 1
                 self.progress_signal.emit(None, 0.0, "", "", "", "")
                 continue
@@ -2567,19 +2512,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(WINDOW_MIN_WIDTH, WINDOW_HEIGHT)
         self.setMinimumWidth(WINDOW_MIN_WIDTH)
 
-        self.setWindowFlags(
-            QtCore.Qt.FramelessWindowHint
-            | QtCore.Qt.Window
-            | QtCore.Qt.WindowSystemMenuHint
-            | QtCore.Qt.WindowMinimizeButtonHint
-        )
-
+        # Native window chrome (TitleBar removed per Phase 1 migration)
         self._apply_dark_theme()
 
         self.worker: Optional[QtCore.QThread] = None
         self._stop_requested_once = False
         self._last_eta = ""
         self._myrient_url_cache: Dict[str, bool] = {}  # Cache for URL validation results
+        # QNetworkAccessManager performs HEAD requests asynchronously, so URL
+        # validation no longer freezes the GUI thread on unreachable hosts.
+        self._qnam = QtNetwork.QNetworkAccessManager(self)
+        self._pending_myrient_url: str = ""  # URL of the in-flight HEAD; used to drop stale responses
 
         central = QtWidgets.QWidget(self)
         self.setCentralWidget(central)
@@ -2587,9 +2530,6 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout = QtWidgets.QVBoxLayout(central)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(8)
-
-        title_bar = TitleBar(self)
-        main_layout.addWidget(title_bar)
 
         # Initialize UI elements
         self.dat_edit = QtWidgets.QLineEdit()
@@ -3051,19 +2991,57 @@ class MainWindow(QtWidgets.QMainWindow):
             url = self.myrient_edit.text().strip()
             # Quick format check first
             if not url or not url.startswith(("http://", "https://")):
-                ok = False
+                self._update_status_indicator(self.myrient_status, False)
             # Check cache to avoid repeated network requests
             elif url in self._myrient_url_cache:
-                ok = self._myrient_url_cache[url]
+                self._update_status_indicator(
+                    self.myrient_status, self._myrient_url_cache[url]
+                )
             else:
-                # Lightweight HEAD request to verify URL is reachable
-                try:
-                    resp = requests.head(url, timeout=5, allow_redirects=True)
-                    ok = resp.status_code < 400
-                except Exception:  # noqa: BLE001
-                    ok = False
-                self._myrient_url_cache[url] = ok
+                # Non-blocking HEAD request via QNetworkAccessManager. The
+                # indicator is updated in _on_myrient_head_finished so the
+                # GUI thread never blocks on network I/O.
+                self._start_myrient_head(url)
+
+    def _start_myrient_head(self, url: str) -> None:
+        """Issue a non-blocking HEAD request via QNetworkAccessManager.
+
+        The result is delivered to _on_myrient_head_finished on the GUI thread.
+        Stale responses (where the user has since typed a different URL) still
+        update the cache but do not change the visible indicator.
+        """
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+        # Match the original requests.head(..., allow_redirects=True) behavior.
+        request.setAttribute(
+            QtNetwork.QNetworkRequest.FollowRedirectsAttribute, True
+        )
+        request.setHeader(
+            QtNetwork.QNetworkRequest.UserAgentHeader, "MyrientCanFixDAT/1.0"
+        )
+        self._pending_myrient_url = url
+        reply = self._qnam.head(request)
+        reply.finished.connect(self._on_myrient_head_finished)
+
+    def _on_myrient_head_finished(self) -> None:
+        """Slot for the in-flight HEAD request. Updates cache and indicator."""
+        reply = self.sender()
+        if not isinstance(reply, QtNetwork.QNetworkReply):
+            return
+        url = self._pending_myrient_url
+        if reply.error() == QtNetwork.QNetworkReply.NoError:
+            status = reply.attribute(
+                QtNetwork.QNetworkRequest.HttpStatusCodeAttribute
+            )
+            ok = status is not None and int(status) < 400
+        else:
+            ok = False
+        self._myrient_url_cache[url] = ok
+        # Only refresh the visible indicator if the URL is still the current
+        # one; otherwise the user has typed something else and stale results
+        # would be confusing.
+        if url == self.myrient_edit.text().strip():
             self._update_status_indicator(self.myrient_status, ok)
+        reply.deleteLater()
 
     def _validate_all(self) -> None:
         for name in ("dat", "roms", "downloads", "myrient"):
@@ -3347,8 +3325,7 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle("Myrient URL Not Found (404)")
         dialog.setWindowFlags(
-            QtCore.Qt.FramelessWindowHint
-            | QtCore.Qt.Dialog
+            QtCore.Qt.Dialog
             | QtCore.Qt.WindowSystemMenuHint
         )
         dialog.resize(520, 220)
@@ -3573,8 +3550,7 @@ class DatDownloadDialog(QtWidgets.QDialog):
         self.resize(650, 550)
 
         self.setWindowFlags(
-            QtCore.Qt.FramelessWindowHint
-            | QtCore.Qt.Dialog
+            QtCore.Qt.Dialog
             | QtCore.Qt.WindowSystemMenuHint
         )
 
@@ -3590,9 +3566,6 @@ class DatDownloadDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(6)
-
-        title_bar = TitleBar(self)
-        layout.addWidget(title_bar)
 
         content = QtWidgets.QWidget(self)
         content.setObjectName("dialogPanel")
@@ -3783,7 +3756,7 @@ class DatDownloadDialog(QtWidgets.QDialog):
             self.dat_list.clear()
             self.dat_list.addItem(f"Error: HTTP {e.response.status_code} loading DAT list")
             return
-        except ValueError as e:
+        except ValueError:
             self.dat_list.clear()
             self.dat_list.addItem("Error: Invalid response from GitHub API")
             return

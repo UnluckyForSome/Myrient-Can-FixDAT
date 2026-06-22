@@ -1,0 +1,13 @@
+/* Inspector scaffold and property list styles. */
+
+/* Property list key column */
+QLabel#propertyListLabel {
+    color: {{token.text_muted}};
+    font-size: 11px;
+    min-width: 96px;
+}
+/* Property list value column (middle-elided, selectable) */
+QLabel#propertyListValue {
+    color: {{token.text}};
+    font-size: 11px;
+}

@@ -1,0 +1,29 @@
+/* Action group — role-based button styles. */
+QPushButton#actionGroupPrimary {
+    background-color: {{token.accent}};
+    border-color: {{token.accent}};
+    color: white;
+    font-weight: 650;
+}
+QPushButton#actionGroupPrimary:hover {
+    background-color: {{token.accent_hover}};
+}
+QPushButton#actionGroupSecondary {
+    text-align: left;
+    background: transparent;
+    border-color: transparent;
+    color: {{token.text}};
+    padding-left: 8px;
+}
+QPushButton#actionGroupSecondary:hover {
+    background: {{token.surface_raised}};
+    border-color: {{token.border}};
+}
+QPushButton#actionGroupDestructive {
+    background: transparent;
+    border-color: {{token.error_border}};
+    color: {{token.error}};
+}
+QPushButton#actionGroupDestructive:hover {
+    background: {{token.error_surface}};
+}

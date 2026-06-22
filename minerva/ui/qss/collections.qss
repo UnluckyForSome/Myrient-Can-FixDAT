@@ -1,0 +1,113 @@
+/* ── Collections reference screen ─────────────────────────────────────── */
+
+QListView#collectionNavigator {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+QListView#collectionNavigator::item { border: none; }
+QLineEdit#collectionSearch,
+QLineEdit#collectionsSystemSearch {
+    background: {{token.background}};
+    border-color: transparent;
+    min-height: 31px;
+}
+QFrame#collectionsResultsHeader {
+    background: {{token.surface}};
+    border: none;
+    border-bottom: 1px solid {{token.border}};
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+}
+QFrame#collectionsToolbar {
+    background: {{token.surface_raised}};
+    border: none;
+    border-bottom: 1px solid {{token.border}};
+}
+QTableView#collectionsSystemTable {
+    background: {{token.surface}};
+    alternate-background-color: {{token.surface}};
+    border: none;
+}
+QTableView#collectionsSystemTable::item { padding: 5px 8px; }
+QTableView#collectionsSystemTable::item:hover { background: {{token.surface_raised}}; }
+QTableView#collectionsSystemTable::item:selected {
+    background: {{token.surface_raised}};
+    color: {{token.text}};
+    border-left: 2px solid {{token.accent}};
+}
+QLabel#collectionInspectorTitle {
+    color: {{token.text}};
+    font-size: 17px;
+    font-weight: 700;
+}
+QLabel#collectionInspectorSubtitle {
+    color: {{token.text_muted}};
+    font-size: 11px;
+}
+QLabel#collectionInspectorKey {
+    color: {{token.text_muted}};
+    font-size: 11px;
+    min-width: 92px;
+}
+QLabel#collectionInspectorValue {
+    color: {{token.text}};
+    font-size: 11px;
+}
+QProgressBar#collectionCoverage {
+    background: {{token.surface_raised}};
+    border: none;
+    border-radius: 5px;
+    min-height: 18px;
+    max-height: 18px;
+    text-align: center;
+    color: {{token.text}};
+    font-size: 10px;
+    font-weight: 650;
+}
+QProgressBar#collectionCoverage::chunk {
+    background: {{token.accent}};
+    border-radius: 5px;
+}
+QFrame#diagnosticsPanel {
+    background: {{token.surface}};
+    border: 1px solid {{token.border}};
+    border-radius: 9px;
+}
+QFrame#diagnosticCard {
+    background: {{token.background}};
+    border: 1px solid {{token.border}};
+    border-radius: 8px;
+}
+QLabel#diagnosticIcon {
+    background: {{token.surface_raised}};
+    border: 1px solid {{token.border}};
+    border-radius: 6px;
+}
+QLabel#diagnosticTitle {
+    color: {{token.text_muted}};
+    font-size: 11px;
+    font-weight: 650;
+}
+QLabel#diagnosticValue {
+    color: {{token.text}};
+    font-size: 20px;
+    font-weight: 720;
+}
+QLabel#diagnosticDescription {
+    color: {{token.text_muted}};
+    font-size: 10px;
+}
+QPushButton#diagnosticAction {
+    background: transparent;
+    color: {{token.accent}};
+    border: none;
+    padding: 2px 0;
+    min-height: 24px;
+    font-size: 10px;
+    font-weight: 650;
+    text-align: left;
+}
+QPushButton#diagnosticAction:hover { color: {{token.text}}; }
+QPushButton#diagnosticAction:disabled { color: {{token.text_muted}}; }

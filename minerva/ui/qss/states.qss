@@ -1,0 +1,29 @@
+/* Loading / empty / error state treatments. */
+
+/* Loading bar inside ContentState */
+QProgressBar#contentStateLoadingBar {
+    background: {{token.surface_raised}};
+    border: none;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 10px;
+    min-height: 6px;
+    max-height: 6px;
+}
+QProgressBar#contentStateLoadingBar::chunk {
+    background: {{token.accent}};
+    border-radius: 3px;
+}
+
+/* Empty state already uses emptyStateTitle / emptyStateDescription from base.qss. */
+
+/* Error state title and description (reuse emptyState tokens from base.qss). */
+QLabel#emptyStateTitle {
+    font-size: 18px;
+    font-weight: 650;
+    color: {{token.text}};
+}
+QLabel#emptyStateDescription {
+    color: {{token.text_muted}};
+    font-size: 12px;
+}
