@@ -23,7 +23,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install PyQt5 requests lxml pyinstaller
+          pip install PyQt5 requests lxml pyinstaller==6.22.3
       
       - name: Build executable
         run: |
